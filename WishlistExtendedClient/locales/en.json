@@ -6,6 +6,8 @@
   "wext_current_upgrades": "Hideout upgrades:",
   "wext_future_upgrades": "Future hideout upgrades:",
   "wext_barters": "Barters:",
+  "wext_current_quests": "Active quests:",
+  "wext_future_quests": "Future quests:",
 
-  "wext_in_stash": "In hideout:"
+  "wext_in_stash": "In hideout: {0} ({1} FiR)"
 }

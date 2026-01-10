@@ -16,13 +16,9 @@ namespace WishlistExtended.Patches
         private static void Postfix()
         {
             WishlistService.Init();
-
+            WishlistService.RebuildAll();
             BarterDataService.LoadBarters();
-
-            CraftDataService.InvalidateCache();
-            HideoutDataService.InvalidateCache();
-
-            StashService.BuildCache();
+            StashService.InvalidateCache();
         }
     }
 }

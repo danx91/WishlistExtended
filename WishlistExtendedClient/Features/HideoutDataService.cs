@@ -12,6 +12,7 @@ namespace WishlistExtended.Features
     {
         private static bool _dirty = false;
         private static readonly Dictionary<MongoID, List<WishlistHideoutData>> _cachedRequirements = [];
+        private static readonly Dictionary<MongoID, ItemsCount> _totalNeeded = [];
 
         public static Dictionary<MongoID, List<WishlistHideoutData>> HideoutRequirements
         {
@@ -29,11 +30,28 @@ namespace WishlistExtended.Features
             }
         }
 
+        public static Dictionary<MongoID, ItemsCount> TotalNeeded
+        {
+            get
+            {
+                if (_dirty)
+                {
+                    _dirty = false;
+                    Stopwatch sw = Stopwatch.StartNew();
+                    BuildHideoutRequirements();
+                    Plugin.LogDebug($"Hideout build took {sw.Elapsed.TotalMilliseconds} ms");
+                }
+
+                return _totalNeeded;
+            }
+        }
+
         public static void InvalidateCache() => _dirty = true;
 
         private static void BuildHideoutRequirements()
         {
             _cachedRequirements.Clear();
+            _totalNeeded.Clear();
 
             if (!Singleton<HideoutClass>.Instantiated)
             {
@@ -53,7 +71,7 @@ namespace WishlistExtended.Features
 
             var hideoutMode = Settings.HideoutMode!.Value;
             bool hideFuture = hideoutMode != Settings.EHideoutMode.All;
-            bool excludeLocked = hideoutMode == Settings.EHideoutMode.ExcludeLocked;
+            bool lockedAsFuture = Settings.ShowLockedAsFuture!.Value;
 
             foreach (AreaData area in hideoutAreas)
             {
@@ -81,23 +99,22 @@ namespace WishlistExtended.Features
                         continue;
                     }
 
-                    if (excludeLocked)
+                    bool isLocked = false;
+                    if (lockedAsFuture)
                     {
-                        bool skip = false;
-
                         foreach (Requirement req in stage.Requirements)
                         {
-                            if (req is not ItemRequirement && !req.Fulfilled && excludeLocked)
+                            if (req is not ItemRequirement && !req.Fulfilled)
                             {
-                                Plugin.LogDebug($"\t\tRequirements not fulfilled {req.Type} - skip");
-                                skip = true;
+                                Plugin.LogDebug($"\t\tRequirements not fulfilled {req.Type} - break area");
+                                isLocked = true;
                                 break;
                             }
                         }
 
-                        if (skip)
+                        if (isLocked && hideFuture)
                         {
-                            continue;
+                            break;
                         }
                     }
 
@@ -123,16 +140,29 @@ namespace WishlistExtended.Features
                             _cachedRequirements.Add(itemReq.TemplateId, itemUpgrades);
                         }
 
+                        if (!_totalNeeded.TryGetValue(itemReq.TemplateId, out var totalCount))
+                        {
+                            totalCount = new();
+                            _totalNeeded.Add(itemReq.TemplateId, totalCount);
+                        }
+
+                        totalCount.Total = itemReq.IntCount;
+
+                        if (itemReq.IsSpawnedInSession)
+                        {
+                            totalCount.Fir = itemReq.IntCount;
+                        }
+
                         itemUpgrades.Add(new(
                             area.Template.Type,
                             stage.Level,
                             itemReq.IntCount,
                             itemReq.IsSpawnedInSession,
-                            !isCurrentStage
+                            isLocked || !isCurrentStage
                         ));
 
                         Plugin.LogDebug($"\t\t\tRequirement added: " +
-                            $"{itemReq.TemplateId} ({itemReq.IntCount}) -> {area.Template.Type} ({stage.Level}, FiR: {itemReq.IsSpawnedInSession}, Future: {!isCurrentStage})");
+                            $"{itemReq.TemplateId} ({itemReq.IntCount}) -> {area.Template.Type} ({stage.Level}, FiR: {itemReq.IsSpawnedInSession}, Future: {!isCurrentStage}, Locked: {isLocked})");
                     }
 
                     if (hideFuture)
@@ -144,6 +174,20 @@ namespace WishlistExtended.Features
             }
 
             Plugin.LogSource?.LogInfo($"Loaded hideout requirements - {_cachedRequirements.Count} unique items");
+
+            foreach (var upgrades in _cachedRequirements.Values)
+            {
+                upgrades.Sort((a, b) =>
+                {
+                    int result = a.AreaType.CompareTo(b.AreaType);
+                    if (result != 0)
+                    {
+                        return result;
+                    }
+
+                    return a.Stage.CompareTo(b.Stage);
+                });
+            }
         }
     }
 }

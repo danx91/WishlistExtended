@@ -1,4 +1,5 @@
 ﻿using EFT;
+using EFT.InventoryLogic;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Collections.Generic;
@@ -9,6 +10,8 @@ namespace WishlistExtended.Patches
 {
     internal class WishlistManagerIsInWishlistPatch : ModulePatch
     {
+        public static Item? CurrentItem;
+
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(GClass2067), nameof(GClass2067.IsInWishlist));
@@ -24,7 +27,7 @@ namespace WishlistExtended.Patches
             }
 
             group = EWishlistGroup.Hideout;
-            __result = includeQol && WishlistResolver.IsInWishlist(templateId, out group);
+            __result = includeQol && WishlistResolver.IsInWishlist(templateId, out group, CurrentItem);
 
             return false;
         }

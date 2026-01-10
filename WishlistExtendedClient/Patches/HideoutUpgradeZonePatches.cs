@@ -15,7 +15,7 @@ namespace WishlistExtended.Patches
         [PatchPostfix]
         private static void Postfix()
         {
-            WishlistService.Rebuild();
+            WishlistService.RebuildAll();
         }
     }
 }

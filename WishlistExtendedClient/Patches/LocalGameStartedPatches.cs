@@ -16,7 +16,7 @@ namespace WishlistExtended.Patches
         [PatchPostfix]
         static void Postfix()
         {
-            StashService.BuildCache();
+            StashService.InvalidateCache();
         }
     }
 }

@@ -10,7 +10,7 @@ namespace WishlistExtended.Features
         {
             if (Singleton<HideoutClass>.Instantiated)
             {
-                Singleton<HideoutClass>.Instance.OnAreaUpdated += () => Rebuild();
+                Singleton<HideoutClass>.Instance.OnAreaUpdated += () => RebuildAll();
             }
             else
             {
@@ -19,14 +19,15 @@ namespace WishlistExtended.Features
 
             Profile profile = ClientAppUtils.GetClientApp().GetClientBackEndSession().Profile;
 
-            profile.Skills.AnySkillUp.Action_1 += (_, _) => Rebuild();
-            profile.OnTraderLoyaltyChanged += (_) => Rebuild();
+            profile.Skills.AnySkillUp.Action_1 += (_, _) => RebuildAll();
+            profile.OnTraderLoyaltyChanged += (_) => RebuildAll();
         }
 
-        public static void Rebuild()
+        public static void RebuildAll()
         {
             CraftDataService.InvalidateCache();
             HideoutDataService.InvalidateCache();
+            QuestDataService.InvalidateCache();
         }
     }
 }

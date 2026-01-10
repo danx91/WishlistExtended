@@ -17,5 +17,6 @@ namespace WishlistExtended
                 (url, info, sessionId, output) => wishlistExtendedMod.GetBarters()
             )
         ]
-    ) {}
+    )
+    { }
 }

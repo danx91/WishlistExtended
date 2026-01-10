@@ -15,7 +15,7 @@ namespace WishlistExtended.Patches
         [PatchPostfix]
         private static void Postfix()
         {
-            WishlistService.Rebuild();
+            CraftDataService.InvalidateCache();
         }
     }
 
@@ -29,7 +29,7 @@ namespace WishlistExtended.Patches
         [PatchPostfix]
         private static void Postfix()
         {
-            WishlistService.Rebuild();
+            CraftDataService.InvalidateCache();
         }
     }
 }

@@ -21,34 +21,34 @@ namespace WishlistExtended
             "569668774bdc2da2298b4568"
         ];
 
+        private static readonly Dictionary<MongoId, List<BarterData>> _barters = [];
+
         private readonly HttpResponseUtil _httpResponseUtil = httpResponseUtil;
         private readonly DatabaseService _databaseService = databaseService;
         private readonly ISptLogger<WishlistExtendedMod> _logger = logger;
 
+
         public Task OnLoad()
         {
-            return Task.CompletedTask;
-        }
+            _barters.Clear();
 
-        public ValueTask<string> GetBarters()
-        {
-            Dictionary<MongoId, List<BarterData>> barters = [];
+            int total = 0;
             var allTraders = _databaseService.GetTraders();
 
             foreach (var (traderId, trader) in allTraders)
             {
                 List<BarterData> current = [];
-                barters.Add(traderId, current);
+                _barters.Add(traderId, current);
 
                 TraderAssort assort = trader.Assort;
 
                 foreach (var (tradeId, barterSchemes) in assort.BarterScheme)
                 {
-                    bool hasLoyaltyLvel = assort.LoyalLevelItems.TryGetValue(tradeId, out int loyaltyLevel);
+                    bool hasLoyaltyLevel = assort.LoyalLevelItems.TryGetValue(tradeId, out int loyaltyLevel);
 
                     foreach (var shcemeList in barterSchemes)
                     {
-                        foreach(var scheme in shcemeList)
+                        foreach (var scheme in shcemeList)
                         {
                             if (MoneyIds.Contains(scheme.Template))
                             {
@@ -61,13 +61,21 @@ namespace WishlistExtended
                                 continue;
                             }
 
-                            current.Add(new BarterData(scheme.Template, foundItem.Template, (int?)scheme.Count ?? 1, hasLoyaltyLvel ? loyaltyLevel : 1));
+                            current.Add(new BarterData(scheme.Template, foundItem.Template, (int?)scheme.Count ?? 1, hasLoyaltyLevel ? loyaltyLevel : 1));
+                            total++;
                         }
                     }
                 }
             }
 
-            return new ValueTask<string>(_httpResponseUtil.NoBody(barters));
+            _logger.Info($"[WishlistExtended] Loaded {total} barters from {_barters.Count} traders");
+
+            return Task.CompletedTask;
+        }
+
+        public ValueTask<string> GetBarters()
+        {
+            return new ValueTask<string>(_httpResponseUtil.NoBody(_barters));
         }
     }
 }
