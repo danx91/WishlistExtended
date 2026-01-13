@@ -109,11 +109,11 @@ namespace WishlistExtended.Features
                             _totalNeeded.Add(itemId, totalCount);
                         }
 
-                        totalCount.Total = quantity;
+                        totalCount.Total += quantity;
 
                         if (conditionHandover.onlyFoundInRaid)
                         {
-                            totalCount.Fir = quantity;
+                            totalCount.Fir += quantity;
                         }
 
                         questItems.Add(new(

@@ -146,11 +146,11 @@ namespace WishlistExtended.Features
                             _totalNeeded.Add(itemReq.TemplateId, totalCount);
                         }
 
-                        totalCount.Total = itemReq.IntCount;
+                        totalCount.Total += itemReq.IntCount;
 
                         if (itemReq.IsSpawnedInSession)
                         {
-                            totalCount.Fir = itemReq.IntCount;
+                            totalCount.Fir += itemReq.IntCount;
                         }
 
                         itemUpgrades.Add(new(
