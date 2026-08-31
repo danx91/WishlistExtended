@@ -1,17 +1,17 @@
-﻿using SPTarkov.DI.Annotations;
+﻿using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Utils;
 
 namespace WishlistExtended
 {
-    [Injectable(typePriority: OnLoadOrder.PostDBModLoader + 1)]
+    [Injectable(typePriority: OnLoadOrder.PostLoad)]
     internal class WishlistExtendedMod(
         HttpResponseUtil httpResponseUtil,
-        DatabaseService databaseService,
+        TradersTable tradersTable,
         ISptLogger<WishlistExtendedMod> logger
     ) : IOnLoad
     {
@@ -24,39 +24,41 @@ namespace WishlistExtended
         private static readonly Dictionary<MongoId, List<BarterData>> _barters = [];
 
         private readonly HttpResponseUtil _httpResponseUtil = httpResponseUtil;
-        private readonly DatabaseService _databaseService = databaseService;
+        private readonly TradersTable _tradersTable = tradersTable;
         private readonly ISptLogger<WishlistExtendedMod> _logger = logger;
 
 
-        public Task OnLoad()
+        public async Task OnLoadAsync(CancellationToken cancellationToken)
         {
             _barters.Clear();
 
             int total = 0;
-            var allTraders = _databaseService.GetTraders();
 
-            foreach (var (traderId, trader) in allTraders)
+            foreach (var (traderId, trader) in _tradersTable)
             {
                 List<BarterData> current = [];
                 _barters.Add(traderId, current);
 
                 TraderAssort assort = trader.Assort;
+                var loyalLevelItems = assort.LoyalLevelItems;
+                var itemsById = assort.Items.ToDictionary(i => i.Id);
 
                 foreach (var (tradeId, barterSchemes) in assort.BarterScheme)
                 {
-                    bool hasLoyaltyLevel = assort.LoyalLevelItems.TryGetValue(tradeId, out int loyaltyLevel);
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (!itemsById.TryGetValue(tradeId, out Item? foundItem))
+                    {
+                        continue;
+                    }
+
+                    bool hasLoyaltyLevel = loyalLevelItems.TryGetValue(tradeId, out int loyaltyLevel);
 
                     foreach (var shcemeList in barterSchemes)
                     {
                         foreach (var scheme in shcemeList)
                         {
                             if (MoneyIds.Contains(scheme.Template))
-                            {
-                                continue;
-                            }
-
-                            Item? foundItem = assort.Items.Find(i => i.Id == tradeId);
-                            if (foundItem is null)
                             {
                                 continue;
                             }
@@ -69,8 +71,6 @@ namespace WishlistExtended
             }
 
             _logger.Info($"[WishlistExtended] Loaded {total} barters from {_barters.Count} traders");
-
-            return Task.CompletedTask;
         }
 
         public ValueTask<string> GetBarters()

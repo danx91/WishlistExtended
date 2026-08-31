@@ -35,14 +35,14 @@ namespace WishlistExtended.Features
         {
             _cachedCrafts.Clear();
 
-            if (!Singleton<HideoutClass>.Instantiated)
+            if (!Singleton<HideoutRepresentation>.Instantiated)
             {
-                Plugin.LogSource?.LogError("CraftDataService.BuildCrafts: Singleton HideoutClass is not instantiated");
+                Plugin.LogSource?.LogError("CraftDataService.BuildCrafts: Singleton HideoutRepresentation is not instantiated");
             }
 
             Plugin.LogDebug("Building hideout crafts");
 
-            HideoutClass hideout = Singleton<HideoutClass>.Instance;
+            HideoutRepresentation hideout = Singleton<HideoutRepresentation>.Instance;
 
             HashSet<MongoID> favorites = [];
             foreach (var scheme in hideout.FavoriteProductionSchemes)
@@ -98,11 +98,11 @@ namespace WishlistExtended.Features
                     continue;
                 }
 
-                foreach (ProductionBuildAbstractClass production in stage.Production.Data)
+                foreach (BaseHideoutScheme production in stage.Production.Data)
                 {
                     Plugin.LogDebug($"\tProcessing production: {production._id}");
 
-                    if (production is not GClass2440 itemProduction)
+                    if (production is not ProductionScheme itemProduction)
                     {
                         Plugin.LogDebug($"\t\tProduction is not item production - skip");
                         continue;
@@ -142,7 +142,7 @@ namespace WishlistExtended.Features
                             continue;
                         }
 
-                        if (!GClass2067.IsAvailableForWishlist(itemReq.Item))
+                        if (!WishlistManager.IsAvailableForWishlist(itemReq.Item))
                         {
                             Plugin.LogDebug($"\t\t\tItem {itemReq.TemplateId} is not suitable for wishlist");
                             continue;

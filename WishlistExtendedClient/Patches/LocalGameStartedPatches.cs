@@ -2,7 +2,6 @@
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
-using WishlistExtended.Features;
 
 namespace WishlistExtended.Patches
 {
@@ -10,13 +9,17 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(LocalGame), nameof(LocalGame.smethod_6));
+            return AccessTools.Method(typeof(LocalGame), nameof(LocalGame.Create));
         }
 
         [PatchPostfix]
         static void Postfix()
         {
-            StashService.InvalidateCache();
+            //Currently disabled as it seems like it's too late to cahe hideout items
+            //TODO: Consider using HideoutRepresentation._allStashItems as a replacement
+
+            //Plugin.LogDebug("LocalGame started, invalidating stash cache");
+            //StashService.InvalidateCache();
         }
     }
 }

@@ -4,7 +4,6 @@ using SPT.Reflection.Utils;
 using System.Collections.Generic;
 using System.Diagnostics;
 using WishlistExtended.Config;
-using WishlistExtended.Models;
 using ZGFueDkx.ZGCLib.helpers;
 
 namespace WishlistExtended.Features
@@ -12,8 +11,8 @@ namespace WishlistExtended.Features
     internal static class StashService
     {
         private static bool _dirty = false;
-        private static readonly Dictionary<MongoID, ItemsCount> _stashCache = [];
-        private static readonly Dictionary<MongoID, ItemsCount> _equipmentCache = [];
+        private static readonly Dictionary<MongoID, Models.ItemsCount> _stashCache = [];
+        private static readonly Dictionary<MongoID, Models.ItemsCount> _equipmentCache = [];
 
         public static void InvalidateCache() => _dirty = true;
 
@@ -36,7 +35,7 @@ namespace WishlistExtended.Features
             }
         }
 
-        public static ItemsCount GetItemCount(MongoID templateId)
+        public static Models.ItemsCount GetItemCount(MongoID templateId)
         {
             if (_dirty)
             {
@@ -46,15 +45,15 @@ namespace WishlistExtended.Features
                 Plugin.LogDebug($"Items cache build took {sw.Elapsed.TotalMilliseconds} ms");
             }
 
-            ItemsCount result = new();
+            Models.ItemsCount result = new();
 
-            if (_stashCache.TryGetValue(templateId, out ItemsCount stashCount))
+            if (_stashCache.TryGetValue(templateId, out Models.ItemsCount stashCount))
             {
                 result.Total += stashCount.Total;
                 result.Fir += stashCount.Fir;
             }
 
-            if (_equipmentCache.TryGetValue(templateId, out ItemsCount equipmentCount))
+            if (_equipmentCache.TryGetValue(templateId, out Models.ItemsCount equipmentCount))
             {
                 result.Total += equipmentCount.Total;
                 result.Fir += equipmentCount.Fir;
@@ -68,13 +67,15 @@ namespace WishlistExtended.Features
             _stashCache.Clear();
 
             Profile profile = ClientAppUtils.GetClientApp().GetClientBackEndSession().Profile;
-            IEnumerable<Item> itemsToCache = profile.Inventory.GetPlayerItems(EPlayerItems.Stash |
+            IEnumerable<Item> itemsToCache = profile.Inventory.GetPlayerItems(
+                EPlayerItems.Stash |
                 EPlayerItems.HideoutStashes |
-                EPlayerItems.SortingTable);
+                EPlayerItems.SortingTable
+            );
 
             foreach (Item item in itemsToCache)
             {
-                if (!_stashCache.TryGetValue(item.TemplateId, out ItemsCount itemsCount))
+                if (!_stashCache.TryGetValue(item.TemplateId, out Models.ItemsCount itemsCount))
                 {
                     itemsCount = new();
                     _stashCache.Add(item.TemplateId, itemsCount);
@@ -100,7 +101,7 @@ namespace WishlistExtended.Features
 
             foreach (Item item in itemsToCache)
             {
-                if (!_equipmentCache.TryGetValue(item.TemplateId, out ItemsCount itemsCount))
+                if (!_equipmentCache.TryGetValue(item.TemplateId, out Models.ItemsCount itemsCount))
                 {
                     itemsCount = new();
                     _equipmentCache.Add(item.TemplateId, itemsCount);

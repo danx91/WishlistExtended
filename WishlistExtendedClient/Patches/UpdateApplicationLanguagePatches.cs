@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using EFT;
+using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
 using WishlistExtended.Features;
@@ -9,13 +10,13 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(LocaleManagerClass), nameof(LocaleManagerClass.UpdateApplicationLanguage));
+            return AccessTools.Method(typeof(LocalizationManager), nameof(LocalizationManager.UpdateApplicationLanguage));
         }
 
         [PatchPostfix]
         private static void Postfix()
         {
-            LocalizationService.LoadLocale(LocaleManagerClass.LocaleManagerClass.String_0);
+            LocalizationService.LoadLocale(LocalizationManager.Instance.Culture);
         }
     }
 }

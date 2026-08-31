@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using EFT.Quests;
+using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
 using WishlistExtended.Features;
@@ -9,13 +10,13 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(GClass4007), nameof(GClass4007.HandoverItem));
+            return AccessTools.DeclaredMethod(typeof(QuestControllerClientLocalGame), nameof(QuestControllerClientLocalGame.HandoverItem));
         }
 
         [PatchPostfix]
         private static void Postfix()
         {
-            Plugin.LogDebug("GClass4007.HandoverItem");
+            Plugin.LogDebug("QuestControllerClientLocalGame.HandoverItem");
             QuestDataService.InvalidateCache();
         }
     }
@@ -24,13 +25,13 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(GClass4008), nameof(GClass4008.HandoverItem));
+            return AccessTools.DeclaredMethod(typeof(QuestControllerClientGame), nameof(QuestControllerClientGame.HandoverItem));
         }
 
         [PatchPostfix]
         private static void Postfix()
         {
-            Plugin.LogDebug("GClass4008.HandoverItem");
+            Plugin.LogDebug("QuestControllerClientGame.HandoverItem");
             QuestDataService.InvalidateCache();
         }
     }
@@ -39,13 +40,13 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(LocalQuestControllerClass), nameof(LocalQuestControllerClass.HandoverItem));
+            return AccessTools.DeclaredMethod(typeof(QuestControllerClientBackend), nameof(QuestControllerClientBackend.HandoverItem));
         }
 
         [PatchPostfix]
         private static void Postfix()
         {
-            Plugin.LogDebug("LocalQuestControllerClass.HandoverItem");
+            Plugin.LogDebug("QuestControllerClientBackend.HandoverItem");
             QuestDataService.InvalidateCache();
         }
     }

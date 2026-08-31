@@ -53,14 +53,14 @@ namespace WishlistExtended.Features
             _cachedRequirements.Clear();
             _totalNeeded.Clear();
 
-            if (!Singleton<HideoutClass>.Instantiated)
+            if (!Singleton<HideoutRepresentation>.Instantiated)
             {
                 Plugin.LogSource?.LogError("HideoutDataService.BuildHideoutRequirements: Singleton HideoutClass is not instantiated");
             }
 
             Plugin.LogDebug("Building hideout requirements");
 
-            List<AreaData> hideoutAreas = Singleton<HideoutClass>.Instance.AreaDatas;
+            List<AreaData> hideoutAreas = Singleton<HideoutRepresentation>.Instance.AreaDatas;
 
             if (hideoutAreas.Count == 0)
             {
@@ -128,7 +128,7 @@ namespace WishlistExtended.Features
                             continue;
                         }
 
-                        if (!GClass2067.IsAvailableForWishlist(itemReq.Item))
+                        if (!WishlistManager.IsAvailableForWishlist(itemReq.Item))
                         {
                             Plugin.LogDebug($"\t\t\tItem {itemReq.TemplateId} is not suitable for wishlist");
                             continue;

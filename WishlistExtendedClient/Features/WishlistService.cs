@@ -1,5 +1,6 @@
 ﻿using Comfort.Common;
 using EFT;
+using EFT.Hideout;
 using SPT.Reflection.Utils;
 
 namespace WishlistExtended.Features
@@ -8,19 +9,27 @@ namespace WishlistExtended.Features
     {
         public static void Init()
         {
-            if (Singleton<HideoutClass>.Instantiated)
+            if (Singleton<HideoutRepresentation>.Instantiated)
             {
-                Singleton<HideoutClass>.Instance.OnAreaUpdated += () => RebuildAll();
+                Singleton<HideoutRepresentation>.Instance.OnAreaUpdated += () => RebuildAll();
             }
             else
             {
-                Plugin.LogSource?.LogError("WishlistService.Init: Singleton HideoutClass is not instantiated");
+                Plugin.LogSource?.LogError("WishlistService.Init: Singleton HideoutRepresentation is not instantiated");
             }
 
             Profile profile = ClientAppUtils.GetClientApp().GetClientBackEndSession().Profile;
 
-            profile.Skills.AnySkillUp.Action_1 += (_, _) => RebuildAll();
-            profile.OnTraderLoyaltyChanged += (_) => RebuildAll();
+            profile.Skills.AnySkillUp._innerEvent += (_, _) =>
+            {
+                Plugin.LogDebug("WishlistService: SkillUp event triggered, rebuilding all");
+                RebuildAll();
+            };
+            profile.OnTraderLoyaltyChanged += (_) =>
+            {
+                Plugin.LogDebug("WishlistService: TraderLoyaltyChanged event triggered, rebuilding all");
+                RebuildAll();
+            };
         }
 
         public static void RebuildAll()

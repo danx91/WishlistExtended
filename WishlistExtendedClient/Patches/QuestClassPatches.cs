@@ -10,20 +10,21 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(QuestClass), nameof(QuestClass.SetStatus));
+            return AccessTools.Method(typeof(Quest), nameof(Quest.SetStatus));
         }
 
         [PatchPrefix]
-        static void Prefix(QuestClass __instance, ref EQuestStatus __state)
+        static void Prefix(Quest __instance, ref EQuestStatus __state)
         {
             __state = __instance.QuestStatus;
         }
 
         [PatchPostfix]
-        static void Postfix(QuestClass __instance, EQuestStatus __state)
+        static void Postfix(Quest __instance, EQuestStatus __state)
         {
             if (__instance.QuestStatus != __state)
             {
+                Plugin.LogDebug($"Quest status changed for {__instance.Id} from {__state} to {__instance.QuestStatus}. Invalidating quests cache");
                 QuestDataService.InvalidateCache();
             }
         }

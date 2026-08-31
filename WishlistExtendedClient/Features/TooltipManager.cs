@@ -1,4 +1,5 @@
-﻿using EFT.InventoryLogic;
+﻿using EFT;
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
@@ -277,7 +278,7 @@ namespace WishlistExtended.Features
 
         private static string GetInStashText()
         {
-            ItemsCount count = StashService.GetItemCount(_item!.TemplateId);
+            Models.ItemsCount count = StashService.GetItemCount(_item!.TemplateId);
             return String.Format("wext_in_stash".Localized(), $"<color=#20f020>{count.Total}</color>", $"<color=#f0f020>{count.Fir}</color>");
         }
 

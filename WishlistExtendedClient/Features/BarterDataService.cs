@@ -21,7 +21,7 @@ namespace WishlistExtended.Features
 
             _cachedBarters.Clear();
 
-            if (!Singleton<ItemFactoryClass>.Instantiated)
+            if (!Singleton<ItemFactory>.Instantiated)
             {
                 Plugin.LogSource?.LogError("BarterDataService.LoadBarters: Singleton ItemFactoryClass is not instantiated");
                 return;
@@ -53,7 +53,7 @@ namespace WishlistExtended.Features
             }
 
             Dictionary<MongoID, Item> items = [];
-            ItemFactoryClass itemFactory = Singleton<ItemFactoryClass>.Instance;
+            ItemFactory itemFactory = Singleton<ItemFactory>.Instance;
 
             foreach (var (traderId, barterList) in barterData)
             {
@@ -73,7 +73,7 @@ namespace WishlistExtended.Features
                         items.Add(itemId, item);
                     }
 
-                    if (!GClass2067.IsAvailableForWishlist(item))
+                    if (!WishlistManager.IsAvailableForWishlist(item))
                     {
                         Plugin.LogDebug($"\t\tItem {itemId} is not suitable for wishlist");
                         continue;

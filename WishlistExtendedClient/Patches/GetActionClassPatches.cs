@@ -11,7 +11,7 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GetActionsClass), nameof(GetActionsClass.smethod_9));
+            return AccessTools.Method(typeof(InteractionContextHelper), nameof(InteractionContextHelper.GetAvailableInteractionState));
         }
 
         [PatchPrefix]

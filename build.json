@@ -1,16 +1,16 @@
 {
 	"info": {
 		"name": "wishlistextended",
-		"version": "1.1.0",
-		"spt": "4.0"
+		"version": "1.2.0",
+		"spt": "4.1"
 	},
 	"dest": {
 		"client": "BepInEx/plugins/WishlistExtended/",
-		"server": "SPT/user/mods/WishlistExtended/",
+		"server": "SPT_Runtime/user/mods/WishlistExtended/",
 		"root": ""
 	},
 	"files": {
-		"WishlistExtendedServer/bin/Release/net9.0/WishlistExtended-Server.dll": "server",
+		"WishlistExtendedServer/bin/Release/net10.0/WishlistExtended-Server.dll": "server",
 		"WishlistExtendedClient/bin/Release/netstandard2.1/WishlistExtended-Client.dll": "client",
 		"WishlistExtendedClient/locales": "client",
 		"LICENSE": "root",

@@ -81,8 +81,8 @@ namespace WishlistExtended.Features
             {
                 if (hideEnough && Settings.RemoveIfEnough!.Value)
                 {
-                    ItemsCount inStash = StashService.GetItemCount(itemId);
-                    ItemsCount needed = HideoutDataService.TotalNeeded.TryGetValue(itemId, out var total) ? total : new();
+                    Models.ItemsCount inStash = StashService.GetItemCount(itemId);
+                    Models.ItemsCount needed = HideoutDataService.TotalNeeded.TryGetValue(itemId, out var total) ? total : new();
 
                     if (inStash.Total >= needed.Total && inStash.Fir >= needed.Fir)
                     {
@@ -138,8 +138,8 @@ namespace WishlistExtended.Features
             {
                 if (hideEnough && Settings.RemoveIfEnough!.Value)
                 {
-                    ItemsCount inStash = StashService.GetItemCount(itemId);
-                    ItemsCount needed = QuestDataService.TotalNeeded.TryGetValue(itemId, out var total) ? total : new();
+                    Models.ItemsCount inStash = StashService.GetItemCount(itemId);
+                    Models.ItemsCount needed = QuestDataService.TotalNeeded.TryGetValue(itemId, out var total) ? total : new();
 
                     if (inStash.Total >= needed.Total && inStash.Fir >= needed.Fir)
                     {

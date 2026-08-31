@@ -14,13 +14,13 @@ namespace WishlistExtended.Patches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GClass2067), nameof(GClass2067.IsInWishlist));
+            return AccessTools.Method(typeof(WishlistManager), nameof(WishlistManager.IsInWishlist));
         }
 
         [PatchPrefix]
-        private static bool Prefix(GClass2067 __instance, MongoID templateId, bool includeQol, out EWishlistGroup group, ref bool __result)
+        private static bool Prefix(WishlistManager __instance, MongoID templateId, bool includeQol, out EWishlistGroup group, ref bool __result)
         {
-            if (__instance.Dictionary_0.TryGetValue(templateId, out group))
+            if (__instance._userItems.TryGetValue(templateId, out group))
             {
                 __result = true;
                 return false;
@@ -37,11 +37,11 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GClass2067), nameof(GClass2067.GetWishlist));
+            return AccessTools.Method(typeof(WishlistManager), nameof(WishlistManager.GetWishlist));
         }
 
         [PatchPrefix]
-        private static bool Prefix(GClass2067 __instance, ref IReadOnlyDictionary<MongoID, EWishlistGroup> __result)
+        private static bool Prefix(WishlistManager __instance, ref IReadOnlyDictionary<MongoID, EWishlistGroup> __result)
         {
             var result = new Dictionary<MongoID, EWishlistGroup>();
 
@@ -50,7 +50,7 @@ namespace WishlistExtended.Patches
                 result[itemId] = group;
             }
 
-            foreach (var (itemId, group) in __instance.Dictionary_0)
+            foreach (var (itemId, group) in __instance._userItems)
             {
                 result[itemId] = group;
             }

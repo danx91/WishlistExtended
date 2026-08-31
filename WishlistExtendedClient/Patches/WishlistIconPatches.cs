@@ -1,4 +1,5 @@
-﻿using EFT.InventoryLogic;
+﻿using EFT.Hideout;
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
@@ -53,13 +54,13 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_24));
+            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.OnExamine));
         }
 
         [PatchPrefix]
         private static void Prefix(GridItemView __instance)
         {
-            Plugin.LogDebug($"GridItemView.method_24 {__instance.Item?.TemplateId}");
+            Plugin.LogDebug($"GridItemView.OnExamine {__instance.Item?.TemplateId}");
             WishlistManagerIsInWishlistPatch.CurrentItem = __instance.Item;
         }
 
@@ -78,7 +79,7 @@ namespace WishlistExtended.Patches
         }
 
         [PatchPrefix]
-        private static void Prefix(ItemContextAbstractClass itemContext)
+        private static void Prefix(ItemContext itemContext)
         {
             Plugin.LogDebug($"ItemSpecificationPanel.Show {itemContext.Item?.TemplateId}");
             WishlistManagerIsInWishlistPatch.CurrentItem = itemContext.Item;
@@ -95,14 +96,14 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.method_24));
+            return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.OnRemoveFromWishlist));
         }
 
         [PatchPrefix]
-        private static void Prefix(Item ___item_0)
+        private static void Prefix(Item ____item)
         {
-            Plugin.LogDebug($"ItemSpecificationPanel.method_24 {___item_0?.TemplateId}");
-            WishlistManagerIsInWishlistPatch.CurrentItem = ___item_0;
+            Plugin.LogDebug($"ItemSpecificationPanel.OnRemoveFromWishlist {____item?.TemplateId}");
+            WishlistManagerIsInWishlistPatch.CurrentItem = ____item;
         }
 
         [PatchPostfix]
@@ -116,13 +117,13 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.method_2));
+            return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.TryShowWishlistPurchaseNotification));
         }
 
         [PatchPrefix]
         private static void Prefix(Item item)
         {
-            Plugin.LogDebug($"TraderDealScreen.method_2 {item?.TemplateId}");
+            Plugin.LogDebug($"TraderDealScreen.TryShowWishlistPurchaseNotification {item?.TemplateId}");
             WishlistManagerIsInWishlistPatch.CurrentItem = item;
         }
 
@@ -137,13 +138,13 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GClass2447), nameof(GClass2447.ShowNotification));
+            return AccessTools.Method(typeof(AreaBehaviour), nameof(AreaBehaviour.ShowNotification));
         }
 
         [PatchPrefix]
         private static void Prefix(Item item)
         {
-            Plugin.LogDebug($"GClass2447.ShowNotification {item?.TemplateId}");
+            Plugin.LogDebug($"AreaBehaviour.ShowNotification {item?.TemplateId}");
             WishlistManagerIsInWishlistPatch.CurrentItem = item;
         }
 
@@ -158,14 +159,14 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(GClass3782), nameof(GClass3782.ExecuteInteractionInternal));
+            return AccessTools.DeclaredMethod(typeof(WishlistContextInteractions), nameof(WishlistContextInteractions.ExecuteInteractionInternal));
         }
 
         [PatchPrefix]
-        private static void Prefix(GClass3782 __instance)
+        private static void Prefix(WishlistContextInteractions __instance)
         {
-            Plugin.LogDebug($"GClass3782.ExecuteInteractionInternal {__instance.ItemContextAbstractClass.Item?.TemplateId}");
-            WishlistManagerIsInWishlistPatch.CurrentItem = __instance.ItemContextAbstractClass.Item;
+            Plugin.LogDebug($"WishlistContextInteractions.ExecuteInteractionInternal {__instance._itemContext.Item?.TemplateId}");
+            WishlistManagerIsInWishlistPatch.CurrentItem = __instance._itemContext.Item;
         }
 
         [PatchPostfix]
