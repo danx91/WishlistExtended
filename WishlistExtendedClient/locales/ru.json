@@ -6,6 +6,8 @@
   "wext_current_upgrades": "Улучшения убежища:",
   "wext_future_upgrades": "Будущие улучшения убежища:",
   "wext_barters": "Бартеры:",
+  "wext_current_quests": "Активные задания:",
+  "wext_future_quests": "Будущие задания:",
 
-  "wext_in_stash": "В убежище:"
+  "wext_in_stash": "В убежище: {0} ({1} найдено в рейде)"
 }
