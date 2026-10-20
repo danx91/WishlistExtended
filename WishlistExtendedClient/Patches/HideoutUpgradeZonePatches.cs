@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using EFT.Hideout;
+using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
 using WishlistExtended.Features;
@@ -9,13 +10,14 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(HideoutClass), nameof(HideoutClass.UpgradeZone));
+            return AccessTools.Method(typeof(HideoutRepresentation), nameof(HideoutRepresentation.UpgradeZone));
         }
 
         [PatchPostfix]
         private static void Postfix()
         {
-            WishlistService.Rebuild();
+            Plugin.LogDebug("Hideout zone upgrade started");
+            WishlistService.RebuildAll();
         }
     }
 }

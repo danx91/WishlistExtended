@@ -54,11 +54,18 @@ You can access config while in-game by pressing `F12` key and then selecting `ZG
 * **Hideout upgrades wishlist mode** - Specifies which hideout upgrades should be wishlisted
   * **Disabled** - don't include any upgrades
   * **Current** - include all currently available upgrades
-  * **ExcludeLocked** - same as current but exclude upgrades with missing conditions
   * **All** - include all hideout upgrades (even future ones)
 * **Include barters** - Whether or not to include barters. Mod must be installed on the server for barters wishlist!
-* **Barter priority** - Whether barters should be prioritized over hideout. Only affects displayed icon
+* **Include quests** - Whether or not to include current quests
+* **Crafts priority** - Icon priority for craftings - higher value is more important
+* **Hideout priority** - Icon priority for hideout upgrades - higher value is more important
+* **Barters priority** - Icon priority for barters - higher value is more important
+* **Quests priority** - Icon priority for quests - higher value is more important
+* **Show locked as future** - Whether locked upgrades/crafts should be listed as future instead of current
 * **Show amount of items in stash** - Whether total amount of items in stash should be displayed in the tooltip
+* **Include in-raid items** - Whether items in inventory should be included in amount of items in stash
+* **Remove from wishlist if have enough** - Whether items should be removed from wishlist if you have enough items. If crafts or barters are enabled, item will not be removed if it's present in either of these categories
+* **Show in checkmark tooltip** - Whether wishlist details should be also shown in checkmark tooltip
 * **In-Raid only** - Whether the auto-generated wishlist should work only in raid. Manual wishlist will work regardless
 #### Tooltips
 * **Tooltip mode** - Defines the behavior of tooltip
@@ -67,6 +74,7 @@ You can access config while in-game by pressing `F12` key and then selecting `ZG
   * **Hide** - don't show anything, use 'Show all' bind to show
   * **Cycle** - only one category, use 'Cycle tooltip' bind to change, use 'Show all' bind to show all
   * **HideFuture** - hide future crafts/modules, use 'Show all' bind to show them
+* **Tooltip text size** - Determines size of the tooltip text. 30 is normal, 0 is extremely small
 * **Show all bind** - Shows info hidden by currently selected 'Tooltip mode'
 * **Cycle tooltip bind** - When pressed, category displayed in tooltip is changed (Cycle tooltip mode only)
 #### Colors
@@ -76,6 +84,7 @@ You can access config while in-game by pressing `F12` key and then selecting `ZG
 * **Current hideout upgrades color** - Color of current hideout upgrades in tooltip
 * **Future hideout upgrades color** - Color of future hideout upgrades in tooltip
 * **Barters color** - Color of barters in tooltip
+* **Current quests color** - Color of current quests in tooltip
 #### Loose Loot
 * **Loose loot affix mode** - Specifies how to add the affix to loose loot names
   * **Disabled** - do nothing
@@ -90,7 +99,7 @@ You can access config while in-game by pressing `F12` key and then selecting `ZG
 * **Loose loot affix** - Affix to show next to the item name when enabled
 
 ## License
-Copyright © 2025 danx91 (aka ZGFueDkx)
+Copyright © 2025-2026 danx91 (aka ZGFueDkx)
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 

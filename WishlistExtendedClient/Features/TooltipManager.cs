@@ -1,8 +1,10 @@
-﻿using EFT.InventoryLogic;
+﻿using EFT;
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using WishlistExtended.Config;
@@ -28,14 +30,23 @@ namespace WishlistExtended.Features
 
         public static void OnItemShowTooltip(GridItemView gridItem)
         {
-            if (WishlistResolver.ResolveWhishlist().TryGetValue(gridItem.Item.TemplateId, out _wishlist))
+            if (WishlistResolver.ResolveWhishlist(true, gridItem.Item).TryGetValue(gridItem.Item.TemplateId, out _wishlist))
             {
                 _item = gridItem.Item;
+            }
+            else
+            {
+                Cleanup();
             }
         }
 
         public static void OnQuestShowTooltip()
         {
+            if (Settings.ShowInCheckmark!.Value)
+            {
+                return;
+            }
+
             _fromQuest = true;
             _tooltip = null;
         }
@@ -83,7 +94,7 @@ namespace WishlistExtended.Features
 
             if (Settings.CycleTooltipBind!.Value.IsDown())
             {
-                _tooltipCycle = (_tooltipCycle + 1) % 3;
+                _tooltipCycle++;
             }
 
             string? tooltipText = MakeTooltip() ?? "";
@@ -130,7 +141,7 @@ namespace WishlistExtended.Features
 
             bool showAll = Settings.ShowAllTooltipBind!.Value.IsPressed();
 
-            return tooltipMode switch
+            string? tooltip = tooltipMode switch
             {
                 Settings.ETooltipMode.Disabled => null,
 
@@ -147,26 +158,27 @@ namespace WishlistExtended.Features
 
                 _ => null
             };
+
+            if (tooltip is not null)
+            {
+                int size = 70 + Settings.TooltipSize!.Value;
+                if (size != 100)
+                {
+                    tooltip = $"<size={(int)size}%>{tooltip}</size>";
+                }
+            }
+
+            return tooltip;
         }
 
         private static string? FormatFull()
         {
             StringBuilder result = new();
 
-            if (_wishlist!.HasCraft)
-            {
-                AppendCrafts(result, true);
-            }
-
-            if (_wishlist.HasHideout)
-            {
-                AppendHideout(result, true);
-            }
-
-            if (_wishlist.HasBarter)
-            {
-                AppendBarters(result);
-            }
+            AppendCrafts(result, true);
+            AppendHideout(result, true);
+            AppendBarters(result);
+            AppendQuests(result, true);
 
             if (result.Length == 0)
             {
@@ -187,20 +199,10 @@ namespace WishlistExtended.Features
         {
             StringBuilder result = new();
 
-            if (_wishlist!.HasCraft)
-            {
-                AppendCrafts(result, false);
-            }
-
-            if (_wishlist.HasHideout)
-            {
-                AppendHideout(result, false);
-            }
-
-            if (_wishlist.HasBarter)
-            {
-                AppendBarters(result);
-            }
+            AppendCrafts(result, false);
+            AppendHideout(result, false);
+            AppendBarters(result);
+            AppendQuests(result, false);
 
             if (result.Length == 0)
             {
@@ -220,13 +222,44 @@ namespace WishlistExtended.Features
         private static string? FormatCycle()
         {
             StringBuilder result = new();
+            List<int> steps = new(4);
 
-            switch (_tooltipCycle)
+            if (Settings.CraftMode!.Value != Settings.ECraftMode.Disabled)
             {
-                case 0: AppendCrafts(result, true); break;
-                case 1: AppendHideout(result, true); break;
-                case 2: AppendBarters(result); break;
+                steps.Add(0);
             }
+
+            if (Settings.HideoutMode!.Value != Settings.EHideoutMode.Disabled)
+            {
+                steps.Add(1);
+            }
+
+            if (Settings.IncludeBarters!.Value)
+            {
+                steps.Add(2);
+            }
+
+            if (Settings.IncludeQuests!.Value)
+            {
+                steps.Add(3);
+            }
+
+            switch (steps[_tooltipCycle % steps.Count])
+            {
+                case 0:
+                    AppendCrafts(result, true);
+                    break;
+                case 1:
+                    AppendHideout(result, true);
+                    break;
+                case 2:
+                    AppendBarters(result);
+                    break;
+                case 3:
+                    AppendQuests(result, true);
+                    break;
+            }
+            ;
 
             if (result.Length == 0)
             {
@@ -245,16 +278,17 @@ namespace WishlistExtended.Features
 
         private static string GetInStashText()
         {
-            if (!StashService.Cache.TryGetValue(_item!.TemplateId, out int count))
-            {
-                count = 0;
-            }
-
-            return $"{"wext_in_stash".Localized()} <color=#20f020>{count}</color>";
+            Models.ItemsCount count = StashService.GetItemCount(_item!.TemplateId);
+            return String.Format("wext_in_stash".Localized(), $"<color=#20f020>{count.Total}</color>", $"<color=#f0f020>{count.Fir}</color>");
         }
 
         private static void AppendCrafts(StringBuilder sb, bool includeFuture)
         {
+            if (!_wishlist!.HasCrafts)
+            {
+                return;
+            }
+
             StringBuilder favoriteCrafts = new();
             StringBuilder currentCrafts = new();
             StringBuilder futureCrafts = new();
@@ -298,6 +332,11 @@ namespace WishlistExtended.Features
 
         private static void AppendHideout(StringBuilder sb, bool includeFuture)
         {
+            if (!_wishlist!.HasHideout)
+            {
+                return;
+            }
+
             StringBuilder currentAreas = new();
             StringBuilder futureAreas = new();
 
@@ -310,11 +349,6 @@ namespace WishlistExtended.Features
             foreach (var upgrade in _wishlist!.Hideout)
             {
                 if (!includeFuture && upgrade.IsFuture)
-                {
-                    continue;
-                }
-
-                if (upgrade.Fir && !_item!.SpawnedInSession)
                 {
                     continue;
                 }
@@ -360,6 +394,11 @@ namespace WishlistExtended.Features
 
         private static void AppendBarters(StringBuilder sb)
         {
+            if (!_wishlist!.HasBarters)
+            {
+                return;
+            }
+
             StringBuilder barters = new();
             string color = Settings.BarterColor!.GetHexColor();
 
@@ -379,11 +418,44 @@ namespace WishlistExtended.Features
             }
         }
 
+        private static void AppendQuests(StringBuilder sb, bool includeFuture)
+        {
+            if (!_wishlist!.HasQuests)
+            {
+                return;
+            }
+
+            StringBuilder currentQuests = new();
+
+            string currentColor = Settings.CurrentQuetsColor!.GetHexColor();
+
+            int currentCount = 0;
+
+            foreach (var quest in _wishlist!.Quests)
+            {
+                AppendQuest(
+                    currentQuests,
+                    quest,
+                    currentColor,
+                    ref currentCount
+                );
+            }
+
+            if (currentQuests.Length > 0)
+            {
+                sb.Append("wext_current_quests".Localized())
+                    .Append(" (")
+                    .Append(currentCount)
+                    .AppendLine(")")
+                    .Append(currentQuests);
+            }
+        }
+
         private static void AppendCraft(StringBuilder sb, WishlistCraftData data, string color)
         {
             sb.Append("  ")
                 .Append(data.Quantity)
-                .Append($" -> <color=")
+                .Append($" → <color=")
                 .Append(color)
                 .Append('>')
                 .Append($"{data.ResultId} ShortName".Localized())
@@ -400,7 +472,7 @@ namespace WishlistExtended.Features
         {
             sb.Append("  ")
                 .Append(data.Quantity)
-                .Append(" -> <color=")
+                .Append(" → <color=")
                 .Append(color)
                 .Append('>')
                 .Append(data.AreaType.LocalizeAreaName())
@@ -415,7 +487,7 @@ namespace WishlistExtended.Features
         {
             sb.Append("  ")
                 .Append(data.Quantity)
-                .Append(" -> <color=")
+                .Append(" → <color=")
                 .Append(color)
                 .Append('>')
                 .Append($"{data.ResultId} ShortName".Localized())
@@ -426,6 +498,23 @@ namespace WishlistExtended.Features
                 .Append(" LL")
                 .Append(data.LoyaltyLevel.ToString())
                 .AppendLine("</color>");
+        }
+
+        private static void AppendQuest(StringBuilder sb, WishlistQuestData data, string color, ref int count)
+        {
+            sb.Append("  ")
+                .Append(data.Quantity)
+                .Append(" → <color=")
+                .Append(color)
+                .Append('>')
+                .Append(data.QuestName.Localized())
+                .Append("</color> @ <color=")
+                .Append(color)
+                .Append('>')
+                .Append($"{data.TraderId} Nickname".Localized())
+                .AppendLine("</color>");
+
+            count += data.Quantity;
         }
     }
 }

@@ -35,14 +35,14 @@ namespace WishlistExtended.Features
         {
             _cachedCrafts.Clear();
 
-            if (!Singleton<HideoutClass>.Instantiated)
+            if (!Singleton<HideoutRepresentation>.Instantiated)
             {
-                Plugin.LogSource?.LogError("CraftDataService.BuildCrafts: Singleton HideoutClass is not instantiated");
+                Plugin.LogSource?.LogError("CraftDataService.BuildCrafts: Singleton HideoutRepresentation is not instantiated");
             }
 
             Plugin.LogDebug("Building hideout crafts");
 
-            HideoutClass hideout = Singleton<HideoutClass>.Instance;
+            HideoutRepresentation hideout = Singleton<HideoutRepresentation>.Instance;
 
             HashSet<MongoID> favorites = [];
             foreach (var scheme in hideout.FavoriteProductionSchemes)
@@ -51,8 +51,9 @@ namespace WishlistExtended.Features
             }
 
             var craftMode = Settings.CraftMode!.Value;
-            bool showFuture = craftMode == Settings.ECraftMode.All;
+            bool hideFuture = craftMode != Settings.ECraftMode.All;
             bool favoriteOnly = craftMode == Settings.ECraftMode.Favorite;
+            bool lockedAsFuture = Settings.ShowLockedAsFuture!.Value;
 
             List<AreaData> hideoutAreas = hideout.AreaDatas;
 
@@ -73,7 +74,7 @@ namespace WishlistExtended.Features
 
                 int stageLevel = area.CurrentStage.Level;
 
-                if (showFuture)
+                if (!hideFuture)
                 {
                     while (area.StageAt(stageLevel + 1).Level > 0)
                     {
@@ -97,11 +98,11 @@ namespace WishlistExtended.Features
                     continue;
                 }
 
-                foreach (ProductionBuildAbstractClass production in stage.Production.Data)
+                foreach (BaseHideoutScheme production in stage.Production.Data)
                 {
                     Plugin.LogDebug($"\tProcessing production: {production._id}");
 
-                    if (production is not GClass2440 itemProduction)
+                    if (production is not ProductionScheme itemProduction)
                     {
                         Plugin.LogDebug($"\t\tProduction is not item production - skip");
                         continue;
@@ -114,15 +115,34 @@ namespace WishlistExtended.Features
                         continue;
                     }
 
+                    bool isLocked = false;
+                    if (lockedAsFuture)
+                    {
+                        foreach (Requirement req in itemProduction.requirements)
+                        {
+                            if (req is not ItemRequirement and not AreaRequirement && !req.Fulfilled)
+                            {
+                                Plugin.LogDebug($"\t\tRequirement not fulfilled {req.Type} - skip production");
+                                isLocked = true;
+                                break;
+                            }
+                        }
+
+                        if (isLocked && hideFuture)
+                        {
+                            continue;
+                        }
+                    }
+
                     foreach (Requirement req in itemProduction.requirements)
                     {
                         if (req is not ItemRequirement itemReq)
                         {
-                            Plugin.LogDebug($"\t\t\tNot item requirement: {req.Type} - skip");
+                            Plugin.LogDebug($"\t\t\tNon-item requirement: {req.Type} - skip");
                             continue;
                         }
 
-                        if (!GClass2067.IsAvailableForWishlist(itemReq.Item))
+                        if (!WishlistManager.IsAvailableForWishlist(itemReq.Item))
                         {
                             Plugin.LogDebug($"\t\t\tItem {itemReq.TemplateId} is not suitable for wishlist");
                             continue;
@@ -139,17 +159,31 @@ namespace WishlistExtended.Features
                             itemReq.IntCount,
                             area.Template.Type,
                             itemProduction.Level,
-                            itemProduction.Level > area.CurrentLevel,
+                            isLocked || itemProduction.Level > area.CurrentLevel,
                             isFavorite
                         ));
 
                         Plugin.LogDebug($"\t\t\tCraft added: " +
-                            $"{itemReq.TemplateId} ({itemReq.IntCount}) -> {itemProduction.endProduct} ({area.Template.Type} {stage.Level})");
+                            $"{itemReq.TemplateId} ({itemReq.IntCount}) -> {itemProduction.endProduct} ({area.Template.Type} {itemProduction.Level})");
                     }
                 }
             }
 
             Plugin.LogSource?.LogInfo($"Loaded crafts - {_cachedCrafts.Count} unique items");
+
+            foreach (var crafts in _cachedCrafts.Values)
+            {
+                crafts.Sort((a, b) =>
+                {
+                    int result = a.AreaType.CompareTo(b.AreaType);
+                    if (result != 0)
+                    {
+                        return result;
+                    }
+
+                    return a.AreaStage.CompareTo(b.AreaStage);
+                });
+            }
         }
     }
 }

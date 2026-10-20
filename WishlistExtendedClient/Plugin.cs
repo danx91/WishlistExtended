@@ -8,8 +8,8 @@ using WishlistExtended.Config;
 namespace WishlistExtended
 {
     [
-        BepInPlugin("com.zgfuedkx.wishlistextended", "ZGFueDkx-WishlistExtended", "1.0.0"),
-        BepInDependency("com.SPT.core", "4.0.0"),
+        BepInPlugin("com.zgfuedkx.wishlistextended", "ZGFueDkx-WishlistExtended", "1.2.0"),
+        BepInDependency("com.SPT.core", "4.1.0"),
     ]
     public class Plugin : BaseUnityPlugin
     {

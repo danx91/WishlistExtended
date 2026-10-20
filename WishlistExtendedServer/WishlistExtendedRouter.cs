@@ -14,8 +14,9 @@ namespace WishlistExtended
         [
             new RouteAction<EmptyRequestData>(
                 "/wishlist-extended/barters",
-                (url, info, sessionId, output) => wishlistExtendedMod.GetBarters()
+                (url, info, sessionId, output, cancellationToken) => wishlistExtendedMod.GetBarters()
             )
         ]
-    ) {}
+    )
+    { }
 }

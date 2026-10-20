@@ -6,6 +6,8 @@
   "wext_current_upgrades": "Ulepszenia:",
   "wext_future_upgrades": "Przyszłe ulepszenia:",
   "wext_barters": "Wymiana:",
+  "wext_current_quests": "Aktywne zadania:",
+  "wext_future_quests": "Przyszłe zadania:",
 
-  "wext_in_stash": "W kryjówce:"
+  "wext_in_stash": "W kryjówce: {0} ({1} FiR)"
 }

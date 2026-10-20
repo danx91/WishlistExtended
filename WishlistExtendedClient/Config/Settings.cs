@@ -19,7 +19,6 @@ namespace WishlistExtended.Config
         {
             Disabled,
             Current,
-            ExcludeLocked,
             All,
         }
 
@@ -50,12 +49,21 @@ namespace WishlistExtended.Config
         public static ConfigEntry<ECraftMode>? CraftMode;
         public static ConfigEntry<EHideoutMode>? HideoutMode;
         public static ConfigEntry<bool>? IncludeBarters;
-        public static ConfigEntry<bool>? BarterPriority;
+        public static ConfigEntry<bool>? IncludeQuests;
+        public static ConfigEntry<int>? HideoutPriority;
+        public static ConfigEntry<int>? CraftsPriority;
+        public static ConfigEntry<int>? BartersPriority;
+        public static ConfigEntry<int>? QuestsPriority;
         //public static ConfigEntry<bool>? BarterFallback;
+        public static ConfigEntry<bool>? ShowLockedAsFuture;
         public static ConfigEntry<bool>? ShowStashCount;
+        public static ConfigEntry<bool>? ShowRaidCount;
+        public static ConfigEntry<bool>? RemoveIfEnough;
+        public static ConfigEntry<bool>? ShowInCheckmark;
         public static ConfigEntry<bool>? RaidOnly;
 
         public static ConfigEntry<ETooltipMode>? TooltipMode;
+        public static ConfigEntry<int>? TooltipSize;
         public static ConfigEntry<KeyboardShortcut>? ShowAllTooltipBind;
         public static ConfigEntry<KeyboardShortcut>? CycleTooltipBind;
 
@@ -65,6 +73,7 @@ namespace WishlistExtended.Config
         public static ConfigEntry<Color>? CurrentHideoutColor;
         public static ConfigEntry<Color>? FutureHideoutColor;
         public static ConfigEntry<Color>? BarterColor;
+        public static ConfigEntry<Color>? CurrentQuetsColor;
 
         public static ConfigEntry<ELooseLootAffix>? LooseLootAffix;
         public static ConfigEntry<ELooseLootColorMode>? LooseLootColor;
@@ -95,7 +104,7 @@ namespace WishlistExtended.Config
                 "All - include all crafts (even future ones)"
             );
 
-            CraftMode.SettingChanged += (_, _) => WishlistService.Rebuild();
+            CraftMode.SettingChanged += (_, _) => WishlistService.RebuildAll();
 
             HideoutMode = general.BindConfig(
                 "Hideout upgrades wishlist mode",
@@ -103,11 +112,10 @@ namespace WishlistExtended.Config
                 "Specifies which hideout upgrades should be wishlisted:\n" +
                 "Disabled - don't include any upgrades\n" +
                 "Current - include all currently available upgrades\n" +
-                "ExcludeLocked - same as current but exclude upgrades with missing conditions\n" +
                 "All - include all hideout upgrades (even future ones)"
             );
 
-            HideoutMode.SettingChanged += (_, _) => WishlistService.Rebuild();
+            HideoutMode.SettingChanged += (_, _) => WishlistService.RebuildAll();
 
             IncludeBarters = general.BindConfig(
                 "Include barters",
@@ -115,12 +123,38 @@ namespace WishlistExtended.Config
                 "Whether or not to include barters. Mod must be installed on the server for barters wishlist!"
             );
 
-            IncludeBarters.SettingChanged += (_, _) => WishlistService.Rebuild();
+            IncludeBarters.SettingChanged += (_, _) => WishlistService.RebuildAll();
 
-            BarterPriority = general.BindConfig(
-                "Barter priority",
+            IncludeQuests = general.BindConfig(
+                "Include quests",
                 false,
-                "Whether barters should be prioritized over hideout. Only affects displayed icon"
+                "Whether or not to include current quests."
+            );
+
+            IncludeQuests.SettingChanged += (_, _) => WishlistService.RebuildAll();
+
+            CraftsPriority = general.BindConfig(
+                "Crafts priority",
+                2,
+                "Icon priority for craftings - higher value is more important"
+            );
+
+            HideoutPriority = general.BindConfig(
+                "Hideout priority",
+                3,
+                "Icon priority for hideout upgrades - higher value is more important"
+            );
+
+            BartersPriority = general.BindConfig(
+                "Barters priority",
+                1,
+                "Icon priority for barters - higher value is more important"
+            );
+
+            QuestsPriority = general.BindConfig(
+                "Quests priority",
+                4,
+                "Icon priority for quests - higher value is more important"
             );
 
             /*BarterFallback = general.BindConfig(
@@ -129,10 +163,38 @@ namespace WishlistExtended.Config
                 "Whether mod should try to fetch barters in other ways if this mod is not installed on the server"
             );*/
 
+            ShowLockedAsFuture = general.BindConfig(
+                "Show locked as future",
+                true,
+                "Whether locked upgrades/crafts should be listed as future instead of current"
+            );
+
+            ShowLockedAsFuture.SettingChanged += (_, _) => WishlistService.RebuildAll();
+
             ShowStashCount = general.BindConfig(
                 "Show amount of items in stash",
                 true,
                 "Whether total amount of items in stash should be displayed in the tooltip"
+            );
+
+            ShowRaidCount = general.BindConfig(
+                "Include in-raid items",
+                false,
+                "Whether items in inventory should be included in amount of items in stash"
+            );
+
+            ShowRaidCount.SettingChanged += (_, _) => StashService.InvalidateCache();
+
+            RemoveIfEnough = general.BindConfig(
+                "Remove from wishlist if have enough",
+                false,
+                "Whether items should be removed from wishlist if you have enough items. If crafts or barters are enabled, item will not be removed if it's present in either of these categories"
+            );
+
+            ShowInCheckmark = general.BindConfig(
+                "Show in checkmark tooltip",
+                false,
+                "Whether wishlist details should be also shown in checkmark tooltip"
             );
 
             RaidOnly = general.BindConfig(
@@ -141,7 +203,7 @@ namespace WishlistExtended.Config
                 "Whether the auto-generated wishlist should work only in raid. Manual wishlist will work regardless"
             );
 
-            RaidOnly.SettingChanged += (_, _) => WishlistService.Rebuild();
+            RaidOnly.SettingChanged += (_, _) => WishlistService.RebuildAll();
 
             /*
              * TOOLTIP
@@ -155,6 +217,13 @@ namespace WishlistExtended.Config
                 "Hide - don't show anything, use 'Show all' bind to show\n" +
                 "Cycle - only one category, use 'Cycle tooltip' bind to change, use 'Show all' bind to show all\n" +
                 "HideFuture - hide future crafts/modules, use 'Show all' bind to show them"
+            );
+
+            TooltipSize = tooltip.BindConfig(
+                "Tooltip text size",
+                30,
+                "Determines size of the tooltip text. 30 is normal, 0 is extremely small",
+                acceptableValue: new AcceptableValueRange<int>(0, 30)
             );
 
             ShowAllTooltipBind = tooltip.BindConfig(
@@ -208,6 +277,12 @@ namespace WishlistExtended.Config
                 "Color of barters in tooltip"
             );
 
+            CurrentQuetsColor = colors.BindColor(
+                "Current quests color",
+                "#85e0e0",
+                "Color of current quests in tooltip"
+            );
+
             /*
              * LOOSE
              */
@@ -254,7 +329,7 @@ namespace WishlistExtended.Config
             debug.BindButton("Rebuild caches", "Rebuild", "Forces rebuild of all caches", () =>
             {
                 BarterDataService.LoadBarters();
-                WishlistService.Rebuild();
+                WishlistService.RebuildAll();
             });
 
             Plugin.LogSource?.LogInfo("Settings loaded");

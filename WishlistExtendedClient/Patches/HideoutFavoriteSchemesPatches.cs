@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using EFT.Hideout;
+using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
 using WishlistExtended.Features;
@@ -9,13 +10,13 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(HideoutClass), nameof(HideoutClass.method_38));
+            return AccessTools.Method(typeof(HideoutRepresentation), nameof(HideoutRepresentation.AddFavoriteScheme));
         }
 
         [PatchPostfix]
         private static void Postfix()
         {
-            WishlistService.Rebuild();
+            CraftDataService.InvalidateCache();
         }
     }
 
@@ -23,13 +24,13 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(HideoutClass), nameof(HideoutClass.method_39));
+            return AccessTools.Method(typeof(HideoutRepresentation), nameof(HideoutRepresentation.RemoveFavoriteScheme));
         }
 
         [PatchPostfix]
         private static void Postfix()
         {
-            WishlistService.Rebuild();
+            CraftDataService.InvalidateCache();
         }
     }
 }

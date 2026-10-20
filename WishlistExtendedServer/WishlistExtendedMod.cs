@@ -1,17 +1,17 @@
-﻿using SPTarkov.DI.Annotations;
+﻿using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Utils;
 
 namespace WishlistExtended
 {
-    [Injectable(typePriority: OnLoadOrder.PostDBModLoader + 1)]
+    [Injectable(typePriority: OnLoadOrder.PostLoad)]
     internal class WishlistExtendedMod(
         HttpResponseUtil httpResponseUtil,
-        DatabaseService databaseService,
+        TradersTable tradersTable,
         ISptLogger<WishlistExtendedMod> logger
     ) : IOnLoad
     {
@@ -21,53 +21,61 @@ namespace WishlistExtended
             "569668774bdc2da2298b4568"
         ];
 
+        private static readonly Dictionary<MongoId, List<BarterData>> _barters = [];
+
         private readonly HttpResponseUtil _httpResponseUtil = httpResponseUtil;
-        private readonly DatabaseService _databaseService = databaseService;
+        private readonly TradersTable _tradersTable = tradersTable;
         private readonly ISptLogger<WishlistExtendedMod> _logger = logger;
 
-        public Task OnLoad()
-        {
-            return Task.CompletedTask;
-        }
 
-        public ValueTask<string> GetBarters()
+        public async Task OnLoadAsync(CancellationToken cancellationToken)
         {
-            Dictionary<MongoId, List<BarterData>> barters = [];
-            var allTraders = _databaseService.GetTraders();
+            _barters.Clear();
 
-            foreach (var (traderId, trader) in allTraders)
+            int total = 0;
+
+            foreach (var (traderId, trader) in _tradersTable)
             {
                 List<BarterData> current = [];
-                barters.Add(traderId, current);
+                _barters.Add(traderId, current);
 
                 TraderAssort assort = trader.Assort;
+                var loyalLevelItems = assort.LoyalLevelItems;
+                var itemsById = assort.Items.ToDictionary(i => i.Id);
 
                 foreach (var (tradeId, barterSchemes) in assort.BarterScheme)
                 {
-                    bool hasLoyaltyLvel = assort.LoyalLevelItems.TryGetValue(tradeId, out int loyaltyLevel);
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (!itemsById.TryGetValue(tradeId, out Item? foundItem))
+                    {
+                        continue;
+                    }
+
+                    bool hasLoyaltyLevel = loyalLevelItems.TryGetValue(tradeId, out int loyaltyLevel);
 
                     foreach (var shcemeList in barterSchemes)
                     {
-                        foreach(var scheme in shcemeList)
+                        foreach (var scheme in shcemeList)
                         {
                             if (MoneyIds.Contains(scheme.Template))
                             {
                                 continue;
                             }
 
-                            Item? foundItem = assort.Items.Find(i => i.Id == tradeId);
-                            if (foundItem is null)
-                            {
-                                continue;
-                            }
-
-                            current.Add(new BarterData(scheme.Template, foundItem.Template, (int?)scheme.Count ?? 1, hasLoyaltyLvel ? loyaltyLevel : 1));
+                            current.Add(new BarterData(scheme.Template, foundItem.Template, (int?)scheme.Count ?? 1, hasLoyaltyLevel ? loyaltyLevel : 1));
+                            total++;
                         }
                     }
                 }
             }
 
-            return new ValueTask<string>(_httpResponseUtil.NoBody(barters));
+            _logger.Info($"[WishlistExtended] Loaded {total} barters from {_barters.Count} traders");
+        }
+
+        public ValueTask<string> GetBarters()
+        {
+            return new ValueTask<string>(_httpResponseUtil.NoBody(_barters));
         }
     }
 }

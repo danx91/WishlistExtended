@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using EFT;
+using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
 using WishlistExtended.Features;
@@ -9,19 +10,16 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(MainMenuControllerClass), nameof(MainMenuControllerClass.ShowMenuScreenSync));
+            return AccessTools.Method(typeof(MainMenuShowOperation), nameof(MainMenuShowOperation.ShowMenuScreenSync));
         }
 
         [PatchPostfix]
         private static void Postfix()
         {
+            Plugin.LogDebug("ShowMenuScreenSync called, initializing wishlist service and rebuilding all caches");
             WishlistService.Init();
-
+            WishlistService.RebuildAll();
             BarterDataService.LoadBarters();
-
-            CraftDataService.InvalidateCache();
-            HideoutDataService.InvalidateCache();
-
             StashService.BuildCache();
         }
     }

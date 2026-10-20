@@ -45,7 +45,7 @@ namespace WishlistExtended.Patches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(QuestItemViewPanel), nameof(QuestItemViewPanel.method_1));
+            return AccessTools.Method(typeof(QuestItemViewPanel), nameof(QuestItemViewPanel.CG_Awake));
         }
 
         [PatchPrefix]

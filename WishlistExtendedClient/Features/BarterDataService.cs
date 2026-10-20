@@ -12,16 +12,16 @@ namespace WishlistExtended.Features
 {
     internal static class BarterDataService
     {
-        private static readonly Dictionary<MongoID, List<WishlistBarterData>> _bartersByItem = [];
-        public static Dictionary<MongoID, List<WishlistBarterData>> Barters => _bartersByItem;
+        private static readonly Dictionary<MongoID, List<WishlistBarterData>> _cachedBarters = [];
+        public static Dictionary<MongoID, List<WishlistBarterData>> Barters => _cachedBarters;
 
         public static void LoadBarters()
         {
             Plugin.LogDebug("Processing barters");
 
-            _bartersByItem.Clear();
+            _cachedBarters.Clear();
 
-            if (!Singleton<ItemFactoryClass>.Instantiated)
+            if (!Singleton<ItemFactory>.Instantiated)
             {
                 Plugin.LogSource?.LogError("BarterDataService.LoadBarters: Singleton ItemFactoryClass is not instantiated");
                 return;
@@ -53,7 +53,7 @@ namespace WishlistExtended.Features
             }
 
             Dictionary<MongoID, Item> items = [];
-            ItemFactoryClass itemFactory = Singleton<ItemFactoryClass>.Instance;
+            ItemFactory itemFactory = Singleton<ItemFactory>.Instance;
 
             foreach (var (traderId, barterList) in barterData)
             {
@@ -73,16 +73,16 @@ namespace WishlistExtended.Features
                         items.Add(itemId, item);
                     }
 
-                    if (!GClass2067.IsAvailableForWishlist(item))
+                    if (!WishlistManager.IsAvailableForWishlist(item))
                     {
                         Plugin.LogDebug($"\t\tItem {itemId} is not suitable for wishlist");
                         continue;
                     }
 
-                    if (!_bartersByItem.TryGetValue(itemId, out var itemBarters))
+                    if (!_cachedBarters.TryGetValue(itemId, out var itemBarters))
                     {
                         itemBarters = [];
-                        _bartersByItem.Add(itemId, itemBarters);
+                        _cachedBarters.Add(itemId, itemBarters);
                     }
 
                     itemBarters.Add(new(
@@ -96,19 +96,19 @@ namespace WishlistExtended.Features
                 }
             }
 
-            Plugin.LogSource?.LogInfo($"Loaded barters - {_bartersByItem.Count} unique items");
+            Plugin.LogSource?.LogInfo($"Loaded barters - {_cachedBarters.Count} unique items");
 
-            foreach (var itemBarters in _bartersByItem.Values)
+            foreach (var itemBarters in _cachedBarters.Values)
             {
                 itemBarters.Sort((a, b) =>
                 {
-                    int result = a.LoyaltyLevel.CompareTo(b.LoyaltyLevel);
+                    int result = a.TraderId.CompareTo(b.TraderId);
                     if (result != 0)
                     {
                         return result;
                     }
 
-                    return a.TraderId.CompareTo(b.TraderId);
+                    return a.LoyaltyLevel.CompareTo(b.LoyaltyLevel);
                 });
             }
         }
