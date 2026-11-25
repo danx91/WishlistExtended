@@ -13,6 +13,13 @@ namespace WishlistExtended
         jsonUtil,
         [
             new RouteAction<EmptyRequestData>(
+                "/wishlist-extended/barters/rebuild",
+                async (url, info, sessionId, output, cancellationToken) => {
+                    wishlistExtendedMod.RebuildBarters(cancellationToken);
+                    return await wishlistExtendedMod.GetBarters();
+                }
+            ),
+            new RouteAction<EmptyRequestData>(
                 "/wishlist-extended/barters",
                 (url, info, sessionId, output, cancellationToken) => wishlistExtendedMod.GetBarters()
             )

@@ -328,7 +328,7 @@ namespace WishlistExtended.Config
 
             debug.BindButton("Rebuild caches", "Rebuild", "Forces rebuild of all caches", () =>
             {
-                BarterDataService.LoadBarters();
+                BarterDataService.LoadBarters(true);
                 WishlistService.RebuildAll();
             });
 

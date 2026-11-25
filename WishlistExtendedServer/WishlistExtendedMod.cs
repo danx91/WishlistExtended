@@ -8,7 +8,7 @@ using SPTarkov.Server.Core.Utils;
 
 namespace WishlistExtended
 {
-    [Injectable(typePriority: OnLoadOrder.PostLoad)]
+    [Injectable(typePriority: OnLoadOrder.PostLoad + 10000)]
     internal class WishlistExtendedMod(
         HttpResponseUtil httpResponseUtil,
         TradersTable tradersTable,
@@ -27,17 +27,21 @@ namespace WishlistExtended
         private readonly TradersTable _tradersTable = tradersTable;
         private readonly ISptLogger<WishlistExtendedMod> _logger = logger;
 
-
         public async Task OnLoadAsync(CancellationToken cancellationToken)
         {
-            _barters.Clear();
+            RebuildBarters(cancellationToken);
+        }
+
+        public void RebuildBarters(CancellationToken cancellationToken)
+        {
+            Dictionary<MongoId, List<BarterData>> newBarters = new();
 
             int total = 0;
 
             foreach (var (traderId, trader) in _tradersTable)
             {
                 List<BarterData> current = [];
-                _barters.Add(traderId, current);
+                newBarters.Add(traderId, current);
 
                 TraderAssort assort = trader.Assort;
                 var loyalLevelItems = assort.LoyalLevelItems;
@@ -68,6 +72,12 @@ namespace WishlistExtended
                         }
                     }
                 }
+            }
+
+            _barters.Clear();
+            foreach (var (traderId, barterList) in newBarters)
+            {
+                _barters.Add(traderId, barterList);
             }
 
             _logger.Info($"[WishlistExtended] Loaded {total} barters from {_barters.Count} traders");

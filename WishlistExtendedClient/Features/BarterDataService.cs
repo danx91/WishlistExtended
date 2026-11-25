@@ -15,7 +15,7 @@ namespace WishlistExtended.Features
         private static readonly Dictionary<MongoID, List<WishlistBarterData>> _cachedBarters = [];
         public static Dictionary<MongoID, List<WishlistBarterData>> Barters => _cachedBarters;
 
-        public static void LoadBarters()
+        public static void LoadBarters(bool rebuildCache = false)
         {
             Plugin.LogDebug("Processing barters");
 
@@ -29,7 +29,7 @@ namespace WishlistExtended.Features
             string? response = null;
             try
             {
-                response = RequestHandler.GetJson("/wishlist-extended/barters");
+                response = RequestHandler.GetJson(rebuildCache ? "/wishlist-extended/barters/rebuild" : "/wishlist-extended/barters");
             }
             catch (Exception ex)
             {
